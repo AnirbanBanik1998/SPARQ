@@ -1,3 +1,4 @@
+import sys
 import numpy as np
 import random
 from numpy.random import uniform, exponential, normal
@@ -55,6 +56,9 @@ def display(d2d, time_gap):
     
 if __name__ == '__main__':
     cell = Cell_Model()
-    cell.mobility()
+    if not int(sys.argv[1]):
+        cell.mobility()
+    else:
+        cell.mobility(True)
     cell = initial_user_locations(cell)
     display(cell.d2d_list[0], cell.time)
