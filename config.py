@@ -65,8 +65,9 @@ class D2D:
 
     def d2d_channel_gain(self):
 
-        path_loss = 148 + 40*math.log10(10*self.rx/1000)
-        gain = pow(self.rx, -4) * pow(10, (self.shadow_fading + path_loss)/10)
+        path_loss = 148 + 40*math.log10(10*self.rv[0]/1000)
+        gain = pow(self.rv[0], -4) * pow(10, 
+                (self.shadow_fading + path_loss)/10)
 
         return gain
 
@@ -118,15 +119,16 @@ class Cellular_UE:
 
     def d2d_channel_gain(self, tx_loc, d2d_fading):
 
-        path_loss = 148 + 40*math.log10(10*tx_loc/1000)
-        gain = pow(tx_loc, -4) * pow(10, (d2d_fading + path_loss)/10)
+        path_loss = 148 + 40*math.log10(10*tx_loc[0]/1000)
+        gain = pow(tx_loc[0], -4) * pow(10, (d2d_fading + path_loss)/10)
 
         return gain
 
     def cell_channel_gain(self):
 
-        path_loss = 128.1 + 37.6*math.log10(10*self.loc/1000)
-        gain = pow(self.loc, -4) * pow(10, (self.shadow_fading + path_loss)/10)
+        path_loss = 128.1 + 37.6*math.log10(10*self.loc[0]/1000)
+        gain = pow(self.loc[0], -4) * pow(10, 
+                (self.shadow_fading + path_loss)/10)
 
         return gain
 
