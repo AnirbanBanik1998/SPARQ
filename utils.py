@@ -5,7 +5,7 @@ from numpy.random import uniform, exponential, normal
 import math
 import time
 
-from config import Cell_Model, D2D, Cellular_UE
+from config import Cell_Model, D2D, Cellular_UE, Channel
 
 
 def initial_user_locations(cell):
@@ -45,10 +45,31 @@ def initial_user_locations(cell):
         
     return cell
 
-def display(d2d, time_gap):
+
+def init_channels(cell):
+
+    #Initialize the channels
+    for i in range(cell.channels):
+        ch = Channel(i+1)
+        if (i+1) <= cell.cell_users:
+            cell.cellular_list[i].channel = ch.id
+            ch.cell = ch.id
+        cell.channel_list.append(ch)
+
+    return cell
+
+
+
+def display(d2d, cell, time_gap):
     while True:
         try:
-            print('{} {}'.format(d2d.tx, d2d.rv))
+            print('D2D location -> {}, {}'.format(d2d.tx, d2d.rv))
+            print('Cellular UE location -> {}'.format(cell.loc))
+            print('D2D Channel Gain-> {}'.format(str(d2d.d2d_channel_gain())))
+            print('Cell to Rx Channel Gain-> {}'.format(str(d2d.cell_channel_gain(cell.loc, cell.shadow_fading))))
+            print('Cell to BS Channel Gain-> {}'.format(str(cell.cell_channel_gain())))
+            print('D2D Tx to BS Channel Gain-> {}'.format(str(cell.d2d_channel_gain(d2d.tx, d2d.shadow_fading))))
+            print()
             d2d.move()
             time.sleep(time_gap)
         except KeyboardInterrupt:
@@ -61,4 +82,5 @@ if __name__ == '__main__':
     else:
         cell.mobility(True)
     cell = initial_user_locations(cell)
-    display(cell.d2d_list[0], cell.time)
+    cell = init_channels(cell)
+    display(cell.d2d_list[0], cell.cellular_list[0], cell.time)

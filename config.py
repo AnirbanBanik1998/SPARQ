@@ -2,6 +2,7 @@ import numpy as np
 import random
 from numpy.random import uniform, exponential, normal
 import math
+from queue import Queue 
 
 class Cell_Model:
 
@@ -17,6 +18,8 @@ class Cell_Model:
         
         self.cellular_list = []
         self.d2d_list = []
+        self.unnalocated_d2d = Queue()
+        self.channel_list = []
         
     def mobility(self, d2d=False):
     
@@ -44,6 +47,7 @@ class D2D:
         self.del_theta = del_theta
         self.pow = 0 # Transmitter power
         self.shadow_fading = 0
+        self.allocation = 0 # 0->Non-Allocated, 1->Shared, 2->Dedicated
         
     def move(self):
     
@@ -74,6 +78,16 @@ class D2D:
     def cell_channel_gain(self, cell_loc, cell_fading):
 
         # Calculate distance between D2D Rx and Cellular UE
+        tx_x_y = [self.tx[0]*(math.cos(3.14*self.tx[1]/180)), 
+                self.tx[0]*(math.sin(3.14*self.tx[1]/180))]
+        rv_x_y = [self.rv[0]*(math.cos(3.14*self.rv[1]/180)) + tx_x_y[0], 
+                self.rv[0]*(math.sin(3.14*self.rv[1]/180)) + tx_x_y[1]]
+        cell_x_y = [cell_loc[0]*(math.cos(3.14*cell_loc[1]/180)), 
+                cell_loc[0]*(math.sin(3.14*cell_loc[1]/180))]
+
+        distance = math.sqrt(math.pow((cell_x_y[0] - rv_x_y[0]), 2) + \
+                math.pow((cell_x_y[1] - rv_x_y[1]), 2))
+
         path_loss = 128.1 + 37.6*math.log10(10*distance/1000)
         gain = pow(distance, -4) * pow(10, (cell_fading + path_loss)/10)
 
