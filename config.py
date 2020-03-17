@@ -7,7 +7,7 @@ from queue import Queue
 class Cell_Model:
 
     def __init__(self, cell_radius=500, d2d_radius=50, 
-            cell_users=30, d2d_pairs=10, channels=33, time=5):
+            cell_users=30, d2d_pairs=10, channels=33, time=5, noise=10):
         
         self.cell_radius = cell_radius
         self.d2d_radius = d2d_radius
@@ -15,11 +15,15 @@ class Cell_Model:
         self.d2d_pairs = d2d_pairs
         self.channels = channels
         self.time = time
+        self.noise = noise
         
         self.cellular_list = []
         self.d2d_list = []
         self.unnalocated_d2d = Queue()
         self.channel_list = []
+
+        self.cell_threshold_SINR = pow(10, 0.6)
+        self.d2d_threshold_SINR = 0 # No QoS requirements for D2D
         
     def mobility(self, d2d=False):
     
@@ -46,13 +50,18 @@ class D2D:
         self.del_d2d_rad = del_d2d_rad
         self.del_theta = del_theta
         self.pow = 0 # Transmitter power
+        self.max_power = pow(10, 2.3)
         self.shadow_fading = 0
         self.allocation = 0 # 0->Non-Allocated, 1->Shared, 2->Dedicated
         
     def move(self):
     
+        #Considering both cases, location out of cell, and radius -ve
         if (self.tx[0] + self.del_cell_rad + self.d2d_radius) > self.cell_radius:
             self.tx[0] = self.tx[0] - self.del_cell_rad
+
+        elif (self.tx[0] - self.del_cell_rad - self.d2d_radius) < 0:
+            self.tx[0] = self.tx[0] + self.del_cell_rad
             
         elif (self.tx[0] + self.del_cell_rad + self.d2d_radius) <= self.cell_radius:
             self.tx[0] = self.tx[0] + uniform(-self.del_cell_rad, 
@@ -61,6 +70,9 @@ class D2D:
             
         if (self.rv[0] + self.del_d2d_rad) > self.d2d_radius:
             self.rv[0] = self.rv[0] - self.del_d2d_rad
+
+        elif (self.rv[0] - self.del_d2d_rad) < 0:
+            self.rv[0] = self.rv[0] + self.del_d2d_rad
             
         elif (self.rv[0] + self.del_d2d_rad) <= self.d2d_radius:
             self.rv[0] = self.rv[0] + uniform(-self.del_d2d_rad, 
@@ -105,6 +117,22 @@ class D2D:
 
         return sinr
 
+    def get_cell_state(self, cell_SINR, cell_threshold_SINR):
+
+        if cell_SINR >= cell_threshold_SINR:
+            return 1
+        else:
+            return 0
+
+    def calc_reward(self, state, d2d_SINR, cell_SINR, priority):
+
+        if state:
+            reward = priority * math.log(1+cell_SINR) + math.log(1+d2d_SINR)
+        else:
+            reward = -1
+
+        return reward
+
 
 
 class Cellular_UE:
@@ -118,13 +146,16 @@ class Cellular_UE:
         self.cell_radius = cell_radius
         self.del_rad = del_cell_rad
         self.del_theta = del_theta
-        self.power = 0
+        self.power = pow(10, 2.5)
         self.shadow_fading = 0
         
     def move(self):
         
         if (self.loc[0] + self.del_rad) > self.cell_radius:
             self.loc[0] = self.loc[0] - self.del_rad
+
+        elif (self.loc[0] - self.del_rad) < 0:
+            self.loc[0] = self.loc[0] + self.del_rad
             
         elif (self.loc[0] + self.del_rad) <= self.cell_radius:
             self.loc[0] = self.loc[0] + uniform(-self.del_rad, self.del_rad)
