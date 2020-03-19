@@ -23,7 +23,7 @@ class Cell_Model:
         self.channel_list = []
 
         self.cell_threshold_SINR = pow(10, 0.6)
-        self.d2d_threshold_SINR = 0 # No QoS requirements for D2D
+        self.d2d_threshold_SINR = pow(10, -1) 
         
     def mobility(self, d2d=False):
     

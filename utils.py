@@ -308,24 +308,32 @@ def display(d2d_sinr_threshold, cell_sinr_threshold, noise, d2d,
             iteration += 1
             print('D2D location -> {}, {}'.format(d2d.tx, d2d.rv))
             print('Cellular UE location -> {}'.format(cell.loc))
-            '''
             min_power = d2d.power_given_SINR(d2d_sinr_threshold, cell.power, 
                     d2d.d2d_channel_gain(), d2d.cell_channel_gain(cell.loc, 
                         cell.shadow_fading), noise)
-            '''
-            min_power = 0 #No QoS Requirements for D2D
-            power_list = list(uniform(min_power, d2d.max_power, 16))
-            #print('Power list {}'.format(power_list))
+
+            #min_power = 0 #No QoS Requirements for D2D
+            #power_list = list(uniform(min_power, d2d.max_power, 16))
+            power_list = []
+            power_list_size = 16
+            p = min_power
+            while p <= d2d.max_power:
+                power_list.append(p)
+                p += (d2d.max_power - min_power)/power_list_size
+            print('Power list {}\n'.format(power_list))
+
             start_time = time.time()
             learn(power_list, cell, d2d, noise, cell_sinr_threshold)
             time_taken = time.time() - start_time
             start_time1 = time.time()
             learn_dumb(power_list, cell, d2d, noise, cell_sinr_threshold)
             time_taken1 = time.time() - start_time1
+
+            print('Time taken to learn {}'.format(time_taken))
+            print('Time taken to learn dumbly {}\n'.format(time_taken1))
+            
             d2d.move()
             cell.move()
-            print('Time taken to learn {}'.format(time_taken))
-            print('Time taken to learn dumbly{}\n'.format(time_taken1))
 
             time_list.append(time_taken)
             time_list_dumb.append(time_taken1)
