@@ -7,7 +7,8 @@ from queue import Queue
 class Cell_Model:
 
     def __init__(self, cell_radius=500, d2d_radius=50, 
-            cell_users=30, d2d_pairs=10, channels=33, time=5, noise=10):
+            cell_users=30, d2d_pairs=36, channels=33, time=5, 
+            noise=pow(10, -14.6)):
         
         self.cell_radius = cell_radius
         self.d2d_radius = d2d_radius
@@ -23,7 +24,7 @@ class Cell_Model:
         self.channel_list = []
 
         self.cell_threshold_SINR = pow(10, 0.6)
-        self.d2d_threshold_SINR = pow(10, -1) 
+        self.d2d_threshold_SINR = pow(10, -6) # No QoS requirements for D2D
         
     def mobility(self, d2d=False):
     
@@ -38,7 +39,7 @@ class Cell_Model:
 class D2D:
     
     def __init__(self, id, tx, rv, cell_radius, d2d_radius, 
-            del_cell_rad, del_d2d_rad, del_theta):
+            del_cell_rad, del_d2d_rad, del_theta, shadow_fading):
         
         self.id = id
         self.channel = None
@@ -49,9 +50,9 @@ class D2D:
         self.del_cell_rad = del_cell_rad
         self.del_d2d_rad = del_d2d_rad
         self.del_theta = del_theta
+        self.shadow_fading = shadow_fading
         self.pow = 0 # Transmitter power
-        self.max_power = pow(10, 2.3)
-        self.shadow_fading = 0
+        self.max_power = pow(10, -0.7)
         self.allocation = 0 # 0->Non-Allocated, 1->Shared, 2->Dedicated
         
     def move(self):
@@ -81,7 +82,7 @@ class D2D:
 
     def d2d_channel_gain(self):
 
-        path_loss = 148 + 40*math.log10(10*self.rv[0]/1000)
+        path_loss = 28 + 40*math.log10(10*self.rv[0]/1000)
         gain = pow(self.rv[0], -4) * pow(10, 
                 (self.shadow_fading + path_loss)/10)
 
@@ -100,7 +101,7 @@ class D2D:
         distance = math.sqrt(math.pow((cell_x_y[0] - rv_x_y[0]), 2) + \
                 math.pow((cell_x_y[1] - rv_x_y[1]), 2))
 
-        path_loss = 128.1 + 37.6*math.log10(10*distance/1000)
+        path_loss = 28 + 40*math.log10(10*distance/1000)
         gain = pow(distance, -4) * pow(10, (cell_fading + path_loss)/10)
 
         return gain
@@ -138,7 +139,7 @@ class D2D:
 class Cellular_UE:
 
     def __init__(self, id, location, cell_radius, 
-            del_cell_rad, del_theta):
+            del_cell_rad, del_theta, shadow_fading):
         
         self.id = id
         self.channel = None
@@ -146,8 +147,19 @@ class Cellular_UE:
         self.cell_radius = cell_radius
         self.del_rad = del_cell_rad
         self.del_theta = del_theta
-        self.power = pow(10, 2.5)
-        self.shadow_fading = 0
+        self.max_power = 2
+        self.shadow_fading = shadow_fading
+
+        '''
+        The cellular device modulates its power based on distance
+        The Maximum Tx power is when cellular device is at the edge
+        '''
+        path_loss = 15.3 + 37.6*math.log10(10*500/1000)
+        gain = pow(500, -4) * pow(10, 
+                (self.shadow_fading + path_loss)/10)
+        self.constant = self.max_power * gain
+        self.power = self.get_power(self.cell_channel_gain())
+
         
     def move(self):
         
@@ -162,16 +174,23 @@ class Cellular_UE:
             self.loc[1] = self.loc[1] + uniform(-self.del_theta, 
                 self.del_theta)
 
+        self.power = self.get_power(self.cell_channel_gain())
+
+    def get_power(self, gain):
+
+        power = self.constant / gain
+        return power
+
     def d2d_channel_gain(self, tx_loc, d2d_fading):
 
-        path_loss = 148 + 40*math.log10(10*tx_loc[0]/1000)
+        path_loss = 15.3 + 37.6*math.log10(10*tx_loc[0]/1000)
         gain = pow(tx_loc[0], -4) * pow(10, (d2d_fading + path_loss)/10)
 
         return gain
 
     def cell_channel_gain(self):
 
-        path_loss = 128.1 + 37.6*math.log10(10*self.loc[0]/1000)
+        path_loss = 15.3 + 37.6*math.log10(10*self.loc[0]/1000)
         gain = pow(self.loc[0], -4) * pow(10, 
                 (self.shadow_fading + path_loss)/10)
 
