@@ -23,7 +23,7 @@ def initial_user_locations(cell):
         d_cell_users.append([radius_list[i], theta_list[i]])
     #Shuffling all the users so that the d2d users can be selected randomly
     rand.shuffle(d_cell_users)
-    for i in range(cell.d2d_pairs):
+    for i in range(cell.cell_users):
         d_d2d_users[i][0][0] = d_cell_users[i][0]
         d_d2d_users[i][0][1] = d_cell_users[i][1]
         d_d2d_users[i][1][0] = uniform(0, cell.d2d_radius)
@@ -36,15 +36,15 @@ def initial_user_locations(cell):
         
     for i in range(cell.cell_users):
         ue = Cellular_UE(i+1, d_cell_users[i], cell.cell_radius, 
-                cell.del_cell_rad, cell.del_theta)
-        ue.shadow_fading = shadow_fading_cell[i] #Assigning S.F. to UEs
+                cell.del_cell_rad, cell.del_theta, shadow_fading_cell[i])
+        #ue.shadow_fading = shadow_fading_cell[i] #Assigning S.F. to UEs
         cell.cellular_list.append(ue)
         
     for i in range(cell.d2d_pairs):
         d2d = D2D(i+1, d_d2d_users[i][0], d_d2d_users[i][1], 
                 cell.cell_radius, cell.d2d_radius, cell.del_cell_rad, 
-                cell.del_d2d_rad, cell.del_theta)
-        d2d.shadow_fading = shadow_fading_d2d[i] #Assigning S.F. to D2Ds
+                cell.del_d2d_rad, cell.del_theta, shadow_fading_d2d[i])
+        #d2d.shadow_fading = shadow_fading_d2d[i] #Assigning S.F. to D2Ds
         cell.d2d_list.append(d2d)
         
     return cell
@@ -61,6 +61,62 @@ def init_channels(cell):
         cell.channel_list.append(ch)
 
     return cell
+
+def allocate(cell):
+    for ch in cell.channel_list:
+        ch.d2d = ch.id
+        cell.d2d_list[ch.id-1].channel = ch.id
+    return cell
+        
+def display_multi(d2d_sinr_threshold, cell_sinr_threshold, noise, d2d_list, 
+        cell_list, time_gap, channel_list):
+    
+    shared_channels = []
+    iteration = 0
+    while True:
+        try:
+            iteration += 1
+            for ch in channel_list:
+                if ch.cell is not None:
+                    shared_channels.append(ch.id-1)
+            for i in shared_channels:
+                print("Cell no. =",(i+1))
+                print('Cellular UE location -> {}'.format(cell_list[i].loc))
+
+                min_power = d2d_list[i].power_given_SINR(d2d_sinr_threshold, 
+                        cell_list[i].power, d2d_list[i].d2d_channel_gain(), 
+                        d2d_list[i].cell_channel_gain(cell_list[i].loc, 
+                            cell_list[i].shadow_fading), noise)
+                print("D2D no. =",(i+1))
+                print('D2D location -> {}, {}'.format(d2d_list[i].tx, 
+                        d2d_list[i].rv))
+                print(min_power, d2d_list[i].max_power)
+                power_list = []
+                power_list_size = 16
+                p = min_power
+                while p <= d2d_list[i].max_power:
+                    p += (d2d_list[i].max_power - min_power)/power_list_size
+                    power_list.append(p)
+                print('Cell power {}'.format(cell_list[i].power))
+                print('Power list {}\n'.format(power_list))
+
+                start_time = time.time()
+                learn(power_list, cell_list[i], d2d_list[i], noise, cell_sinr_threshold)
+                time_taken = time.time() - start_time
+                start_time1 = time.time()
+                learn_dumb(power_list, cell_list[i], d2d_list[i], noise, cell_sinr_threshold)
+                time_taken1 = time.time() - start_time1
+                print('Time taken to learn {}'.format(time_taken))
+                print('Time taken to learn dumbly{}\n'.format(time_taken1))
+                
+            for i in range(len(cell_list)):
+                cell_list[i].move()
+            for i in range(len(d2d_list)):
+                d2d_list[i].move()
+            #time.sleep(time_gap)
+
+        except KeyboardInterrupt:
+            break
 
 def learn(actions, cell, d2d, noise, cell_SINR_threshold):
     import copy
@@ -130,7 +186,7 @@ def learn(actions, cell, d2d, noise, cell_SINR_threshold):
             if exploration_rate_threshold > exploration_rate:
                 action = np.argmax(q_table[state, :]) # Exploitation
             else:
-                action = np.random.randint(action_space_size) 
+                action = np.random.randint(0, action_space_size) 
                 # Exploration randomly
 
             # Noting which power levels have been used up
@@ -248,7 +304,7 @@ def learn_dumb(actions, cell, d2d, noise, cell_SINR_threshold):
             if exploration_rate_threshold > exploration_rate:
                 action = np.argmax(q_table[state, :]) # Exploitation
             else:
-                action = np.random.randint(action_space_size) 
+                action = np.random.randint(0, action_space_size) 
                 # Exploration randomly
 
             '''
@@ -331,7 +387,7 @@ def display(d2d_sinr_threshold, cell_sinr_threshold, noise, d2d,
 
             print('Time taken to learn {}'.format(time_taken))
             print('Time taken to learn dumbly {}\n'.format(time_taken1))
-            
+
             d2d.move()
             cell.move()
 
@@ -346,7 +402,7 @@ def display(d2d_sinr_threshold, cell_sinr_threshold, noise, d2d,
             plt.legend(loc='best')
             plt.show()
             break
-    
+'''
 if __name__ == '__main__':
     cell = Cell_Model()
     if not int(sys.argv[1]):
@@ -357,3 +413,17 @@ if __name__ == '__main__':
     cell = init_channels(cell)
     display(cell.d2d_threshold_SINR, cell.cell_threshold_SINR, cell.noise, 
         cell.d2d_list[0], cell.cellular_list[0], cell.time)
+'''
+
+if __name__ == '__main__':
+    cell = Cell_Model()
+    if not int(sys.argv[1]):
+        cell.mobility()
+    else:
+        cell.mobility(True)
+    cell = initial_user_locations(cell)
+    cell = init_channels(cell)
+    cell = allocate(cell)
+    display_multi(cell.d2d_threshold_SINR, cell.cell_threshold_SINR, 
+            cell.noise, cell.d2d_list, cell.cellular_list, cell.time, 
+            cell.channel_list)
