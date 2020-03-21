@@ -51,7 +51,7 @@ class D2D:
         self.del_d2d_rad = del_d2d_rad
         self.del_theta = del_theta
         self.shadow_fading = shadow_fading
-        self.pow = 0 # Transmitter power
+        self.power = 0 # Transmitter power
         self.max_power = pow(10, -0.7)
         self.allocation = 0 # 0->Non-Allocated, 1->Shared, 2->Dedicated
         
@@ -79,6 +79,20 @@ class D2D:
             self.rv[0] = self.rv[0] + uniform(-self.del_d2d_rad, 
                     self.del_d2d_rad)
             self.rv[1] = self.rv[1] + uniform(-self.del_theta, self.del_theta)
+
+    def get_power(self, size, cell, d2d_sinr_threshold, noise):
+
+        min_power = self.power_given_SINR(d2d_sinr_threshold, 
+                cell.power, self.d2d_channel_gain(), 
+                self.cell_channel_gain(cell.loc, cell.shadow_fading), noise)
+        power_list = []
+        p = min_power
+        while p <= self.max_power:
+            p += (self.max_power - min_power)/size
+            power_list.append(p)
+
+        print('Power list {}\n'.format(power_list))
+        return power_list
 
     def d2d_channel_gain(self):
 
@@ -128,7 +142,7 @@ class D2D:
     def calc_reward(self, state, d2d_SINR, cell_SINR, priority):
 
         if state:
-            reward = priority * math.log(1+cell_SINR) + math.log(1+d2d_SINR)
+            reward = priority * math.log2(1+cell_SINR) + math.log2(1+d2d_SINR)
         else:
             reward = -1
 
@@ -215,6 +229,17 @@ class Channel:
         self.id = id
         self.cell = None
         self.d2d = None
+        self.reward = None
+        self.throughput = 0
+
+    def calculate_throughput(self, d2d_SINR, cell_SINR=None):
+
+        if not cell_SINR:
+            throughput = math.log2(1 + d2d_SINR)
+        else:
+            throughput = math.log2(1 + d2d_SINR) + math.log2(1 + cell_SINR)
+
+        return throughput
     
 
 class Base_Station:
