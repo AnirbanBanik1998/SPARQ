@@ -7,7 +7,7 @@ from queue import Queue
 class Cell_Model:
 
     def __init__(self, cell_radius=500, d2d_radius=50, 
-            cell_users=30, d2d_pairs=36, channels=33, time=5, 
+            cell_users=5, d2d_pairs=10, channels=7, time=5, 
             noise=pow(10, -14.6)):
         
         self.cell_radius = cell_radius
@@ -20,7 +20,7 @@ class Cell_Model:
         
         self.cellular_list = []
         self.d2d_list = []
-        self.unnalocated_d2d = Queue()
+        self.unallocated_d2d = Queue()
         self.channel_list = []
 
         self.cell_threshold_SINR = pow(10, 0.6)

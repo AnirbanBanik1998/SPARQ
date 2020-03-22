@@ -6,7 +6,7 @@ import math
 import time
 import matplotlib.pyplot as plt
 
-from utils import initial_user_locations, init_channels, allocate
+from utils import initial_user_locations, init_channels, allocate, swap
 from q_learn import learn, learn_dumb
 from config import Cell_Model, D2D, Cellular_UE, Channel
 from display import single_display
@@ -33,16 +33,17 @@ def compute(cell, action_size, iterations):
 
     for iteration in range(iterations):
 
-        print('\nIteration {}\n'.format(iteration))
+        print('\nIteration {}\n'.format(iteration + 1))
         total_throughput = 0
         iterations_list.append(iteration + 1)
+
         # Swapping operations Performed
-        '''
         cell, shared_channels, dedicated_channels = swap(cell, 
-                shared_channels, dedicated_channels)
-        '''
+                shared_channels, dedicated_channels, iteration + 1)
+
         for channel in shared_channels:
 
+            print('Channel No. ={}'.format(channel.id))
             print("Cell no. =", channel.cell)
             print('Cellular UE location -> {}'.format(cell.cellular_list[channel.cell - 1].loc))
             print("D2D no. =", channel.d2d)
@@ -89,7 +90,13 @@ def compute(cell, action_size, iterations):
 
         for channel in dedicated_channels:
 
+            print('Channel No. ={}'.format(channel.id))
+            print('D2D No. ={}'.format(channel.d2d))
+            print('D2D location -> {}, {}'.format(cell.d2d_list[channel.d2d - 1].tx, 
+                    cell.d2d_list[channel.d2d - 1].rv))
             cell.d2d_list[channel.d2d - 1].power = np.random.random_sample() *cell.d2d_list[channel.d2d - 1].max_power
+
+            print('D2D Power {}'.format(cell.d2d_list[channel.d2d - 1].power))
 
             d2d_SINR = cell.d2d_list[channel.d2d - 1].SINR_given_power(cell.d2d_list[channel.d2d - 1].power, 
                     0, d2d_d2d, 
@@ -109,14 +116,24 @@ def compute(cell, action_size, iterations):
     return iterations_list, throughput_list
 
 if __name__ == '__main__':
-    cell = Cell_Model()
-    if not int(sys.argv[1]):
-        cell.mobility()
-    else:
-        cell.mobility(True)
-    cell = initial_user_locations(cell)
-    cell = init_channels(cell)
-    cell = allocate(cell)
-    iterations_list, throughput_list = compute(cell, 16, 10)
-    single_display(iterations_list, throughput_list, color='b-', 
+
+    simulations = 10
+    iterations_per_simulation = 50
+    average_throughput_list = np.zeros(iterations_per_simulation)
+    for _ in range(simulations):
+
+        cell = Cell_Model()
+        if not int(sys.argv[1]):
+            cell.mobility()
+        else:
+            cell.mobility(True)
+        cell = initial_user_locations(cell)
+        cell = init_channels(cell)
+        cell = allocate(cell)
+        iterations_list, throughput_list = compute(cell, 16, 
+                iterations_per_simulation)
+        average_throughput_list = average_throughput_list + np.array(throughput_list)
+
+    average_throughput_list = list(average_throughput_list / simulations)
+    single_display(iterations_list, average_throughput_list, color='b-', 
             xlabel='Iterations', ylabel='Throughput in dBm')
