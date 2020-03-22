@@ -94,8 +94,23 @@ def compute(cell, action_size, iterations):
             print('D2D No. ={}'.format(channel.d2d))
             print('D2D location -> {}, {}'.format(cell.d2d_list[channel.d2d - 1].tx, 
                     cell.d2d_list[channel.d2d - 1].rv))
+            '''
             cell.d2d_list[channel.d2d - 1].power = np.random.random_sample() *cell.d2d_list[channel.d2d - 1].max_power
+            '''
 
+            # Channel Gain from d2d tx to rx
+            d2d_d2d = cell.d2d_list[channel.d2d - 1].d2d_channel_gain()
+
+            # Calculation of constant
+            path_loss = 28 + 40*math.log10(10*50/1000)
+            gain = pow(50, -4) * pow(10, 
+                    (cell.d2d_list[channel.d2d - 1].shadow_fading + path_loss)/10)
+            constant = cell.d2d_list[channel.d2d - 1].max_power * gain
+
+            power = max(constant/d2d_d2d, 
+                    cell.d2d_list[channel.d2d - 1].power_given_SINR(cell.d2d_threshold_SINR, 
+                            0, d2d_d2d, 0, cell.noise))
+            cell.d2d_list[channel.d2d - 1].power = power
             print('D2D Power {}'.format(cell.d2d_list[channel.d2d - 1].power))
 
             d2d_SINR = cell.d2d_list[channel.d2d - 1].SINR_given_power(cell.d2d_list[channel.d2d - 1].power, 
@@ -120,8 +135,8 @@ if __name__ == '__main__':
     simulations = 10
     iterations_per_simulation = 50
     average_throughput_list = np.zeros(iterations_per_simulation)
-    for _ in range(simulations):
-
+    for sim in range(simulations):
+        print('\n Simulation {} \n'.format(sim + 1))
         cell = Cell_Model()
         if not int(sys.argv[1]):
             cell.mobility()
