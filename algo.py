@@ -6,7 +6,7 @@ import math
 import time
 import matplotlib.pyplot as plt
 
-from utils import initial_user_locations, init_channels, allocate, swap
+from utils import initial_user_locations, init_channels, allocate, swap, swap_new
 from q_learn import learn, learn_dumb
 from config import Cell_Model, D2D, Cellular_UE, Channel
 from display import single_display
@@ -38,9 +38,12 @@ def compute(cell, action_size, iterations):
         iterations_list.append(iteration + 1)
 
         # Swapping operations Performed
+        '''
         cell, shared_channels, dedicated_channels = swap(cell, 
                 shared_channels, dedicated_channels, iteration + 1)
-
+        '''
+        cell, shared_channels, dedicated_channels = swap_new(cell, 
+                shared_channels, dedicated_channels, iteration + 1)
         for channel in shared_channels:
 
             print('Channel No. ={}'.format(channel.id))
@@ -125,7 +128,7 @@ def compute(cell, action_size, iterations):
         for d2d in cell.d2d_list:
             d2d.move()
 
-        total_throughput = 10 * math.log10(total_throughput) + 30
+        #total_throughput = 10 * math.log10(total_throughput) + 30
         throughput_list.append(total_throughput)
 
     return iterations_list, throughput_list
@@ -133,7 +136,7 @@ def compute(cell, action_size, iterations):
 if __name__ == '__main__':
 
     simulations = 10
-    iterations_per_simulation = 50
+    iterations_per_simulation = 25
     average_throughput_list = np.zeros(iterations_per_simulation)
     for sim in range(simulations):
         print('\n Simulation {} \n'.format(sim + 1))
@@ -151,4 +154,4 @@ if __name__ == '__main__':
 
     average_throughput_list = list(average_throughput_list / simulations)
     single_display(iterations_list, average_throughput_list, color='b-', 
-            xlabel='Iterations', ylabel='Throughput in dBm')
+            xlabel='Iterations', ylabel='Throughput in Mbps')

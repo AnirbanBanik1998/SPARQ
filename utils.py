@@ -62,8 +62,14 @@ def init_channels(cell):
     return cell
 
 def allocate(cell):
+    i = 0
     for ch in cell.channel_list:
         ch.d2d = ch.id
+        i += 1
+    while i < len(cell.d2d_list):
+        cell.unallocated_d2d.put(i+1)
+        i += 1
+
     return cell
         
 def swap(cell, shared_channels, dedicated_channels, iteration):
@@ -101,3 +107,58 @@ def swap(cell, shared_channels, dedicated_channels, iteration):
 
     return cell, shared_channels, dedicated_channels
 
+
+def swap_new(cell, shared_channels, dedicated_channels, iteration):
+
+    if iteration is not 1:
+        min_reward = shared_channels[0].reward
+        shared_location = None
+        for i in range(len(shared_channels)):
+            print('Reward for channel {} is {}'.format(shared_channels[i].id, 
+                    shared_channels[i].reward))
+            if int(shared_channels[i].reward) == -1:
+                shared_location = i 
+                break
+            if int(shared_channels[i].reward) < 1000:
+                if min_reward >= shared_channels[i].reward:
+                    shared_location = i
+                    min_reward = shared_channels[i].reward
+
+        min_throughput = dedicated_channels[0].throughput 
+        dedicated_location = 0
+        for i in range(len(dedicated_channels)):
+            if min_throughput >= dedicated_channels[i].throughput:
+                dedicated_location = i
+                min_throughput = dedicated_channels[i].throughput
+
+        if shared_location is not None:
+            print(str(shared_location)+'\n')
+            cell.unallocated_d2d.put(shared_channels[shared_location].d2d)
+            print('D2D {} of Shared Channel {} Unallocated'.format(shared_channels[shared_location].d2d, 
+                    shared_channels[shared_location].id))
+
+            shared_channels[shared_location].d2d = dedicated_channels[dedicated_location].d2d 
+            shared_channels[shared_location].reward = None
+            print('D2D {} of Dedicated Channel {} to Shared Channel {}'.format(dedicated_channels[dedicated_location].d2d, 
+                    dedicated_channels[dedicated_location].id, 
+                    shared_channels[shared_location].id))
+
+            dedicated_channels[dedicated_location].d2d = cell.unallocated_d2d.get()
+            print('Unallocated D2D {} to Dedicated Channel {}'.format(dedicated_channels[dedicated_location].d2d, 
+                    dedicated_channels[dedicated_location].id))
+
+            cell.channel_list[shared_channels[shared_location].id - 1] = shared_channels[shared_location]
+
+        else:
+
+            cell.unallocated_d2d.put(dedicated_channels[dedicated_location].d2d)
+            print('D2D {} of Dedicated Channel {} Unallocated'.format(dedicated_channels[dedicated_location].d2d, 
+                    dedicated_channels[dedicated_location].id))
+
+            dedicated_channels[dedicated_location].d2d = cell.unallocated_d2d.get()
+            print('Unallocated D2D {} to Dedicated Channel {}'.format(dedicated_channels[dedicated_location].d2d, 
+                    dedicated_channels[dedicated_location].id))
+
+        cell.channel_list[dedicated_channels[dedicated_location].id - 1] = dedicated_channels[dedicated_location]
+
+    return cell, shared_channels, dedicated_channels
