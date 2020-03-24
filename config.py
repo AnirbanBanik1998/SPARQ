@@ -80,7 +80,7 @@ class D2D:
                     self.del_d2d_rad)
             self.rv[1] = self.rv[1] + uniform(-self.del_theta, self.del_theta)
 
-    def get_power(self, size, cell, d2d_sinr_threshold, noise):
+    def get_power_list(self, size, cell, d2d_sinr_threshold, noise):
 
         min_power = self.power_given_SINR(d2d_sinr_threshold, 
                 cell.power, self.d2d_channel_gain(), 
@@ -89,6 +89,29 @@ class D2D:
         p = min_power
         while p <= self.max_power:
             p += (self.max_power - min_power)/size
+            power_list.append(p)
+
+        print('Power list {}\n'.format(power_list))
+        return power_list
+
+    def update_power_list(self, size, cell, d2d_sinr_threshold, noise):
+
+        delta = self.power / 10
+        threshold_power = self.power_given_SINR(d2d_sinr_threshold, 
+                cell.power, self.d2d_channel_gain(), 
+                self.cell_channel_gain(cell.loc, cell.shadow_fading), noise)
+        if threshold_power < self.power + delta:
+            min_power = max(threshold_power, self.power - delta)
+            max_power = min(self.power + delta, self.max_power)
+
+        else:
+            min_power = threshold_power
+            max_power = self.max_power
+            
+        power_list = []
+        p = min_power
+        while p <= max_power:
+            p += (max_power - min_power)/size
             power_list.append(p)
 
         print('Power list {}\n'.format(power_list))
@@ -231,6 +254,7 @@ class Channel:
         self.d2d = None
         self.reward = None
         self.throughput = 0
+        self.freshness = 0 # Checks the freshness, if D2D has just arrived, is 0
 
     def calculate_throughput(self, d2d_SINR, cell_SINR=None):
 
