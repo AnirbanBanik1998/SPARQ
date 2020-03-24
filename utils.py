@@ -94,6 +94,8 @@ def swap(cell, shared_channels, dedicated_channels, iteration):
                 shared_channels[shared_location].id))
 
         shared_channels[shared_location].d2d = dedicated_channels[dedicated_location].d2d 
+        shared_channels[shared_location].reward = None
+        shared_channels[shared_location].freshness = 0 #Initialize freshness to 0
         print('D2D {} of Dedicated Channel {} to Shared Channel {}'.format(dedicated_channels[dedicated_location].d2d, 
                 dedicated_channels[dedicated_location].id, 
                 shared_channels[shared_location].id))
@@ -132,13 +134,13 @@ def swap_new(cell, shared_channels, dedicated_channels, iteration):
                 min_throughput = dedicated_channels[i].throughput
 
         if shared_location is not None:
-            print(str(shared_location)+'\n')
             cell.unallocated_d2d.put(shared_channels[shared_location].d2d)
             print('D2D {} of Shared Channel {} Unallocated'.format(shared_channels[shared_location].d2d, 
                     shared_channels[shared_location].id))
 
             shared_channels[shared_location].d2d = dedicated_channels[dedicated_location].d2d 
             shared_channels[shared_location].reward = None
+            shared_channels[shared_location].freshness = 0 #Initialize freshness to 0
             print('D2D {} of Dedicated Channel {} to Shared Channel {}'.format(dedicated_channels[dedicated_location].d2d, 
                     dedicated_channels[dedicated_location].id, 
                     shared_channels[shared_location].id))
