@@ -61,10 +61,25 @@ def compute(cell, action_size, iterations):
             cell_d2d = cell.d2d_list[channel.d2d - 1].cell_channel_gain(cell.cellular_list[channel.cell - 1].loc, 
                     cell.cellular_list[channel.cell - 1].shadow_fading)
 
-            # Getting the POwer list to be used during learning
-            power_list = cell.d2d_list[channel.d2d - 1].get_power(action_size, 
-                    cell.cellular_list[channel.cell - 1], cell.d2d_threshold_SINR, 
-                    cell.noise)
+            # Getting the Power list to be used during learning
+
+            '''
+            If freshness is 0 then, D2D has just arrived in channel, so 
+            Start learning from scratch.
+            If not then D2D has already been there in the prev iteration 
+            at least, so start adaptive learning.
+            '''
+            if channel.freshness == 0:
+                power_list = cell.d2d_list[channel.d2d - 1].get_power_list(action_size, 
+                        cell.cellular_list[channel.cell - 1], cell.d2d_threshold_SINR, 
+                        cell.noise)
+            else:
+                power_list = cell.d2d_list[channel.d2d - 1].update_power_list(action_size, 
+                        cell.cellular_list[channel.cell - 1], cell.d2d_threshold_SINR, 
+                        cell.noise)
+
+            print('Channel Freshness {}\n'.format(channel.freshness))
+            channel.freshness += 1
 
             # Learning the optimal power to transmit
             cell.d2d_list[channel.d2d - 1].power, reward = learn(power_list, 
