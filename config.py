@@ -2,7 +2,7 @@ import numpy as np
 import random
 from numpy.random import uniform, exponential, normal
 import math
-from queue import Queue 
+from collections import deque 
 
 class Cell_Model:
 
@@ -20,7 +20,7 @@ class Cell_Model:
         
         self.cellular_list = []
         self.d2d_list = []
-        self.unallocated_d2d = Queue()
+        self.unallocated_d2d = deque()
         self.channel_list = []
 
         self.cell_threshold_SINR = pow(10, 0.6)
@@ -54,7 +54,13 @@ class D2D:
         self.power = 0 # Transmitter power
         self.max_power = pow(10, -0.7)
         self.allocation = 0 # 0->Non-Allocated, 1->Shared, 2->Dedicated
-        
+    
+    def follow_tracing(self, tx, rv):
+
+        # Follow the trace left by the primary
+        self.tx = tx 
+        self.rv = rv 
+
     def move(self):
     
         #Considering both cases, location out of cell, and radius -ve
@@ -197,7 +203,12 @@ class Cellular_UE:
         self.constant = self.max_power * gain
         self.power = self.get_power(self.cell_channel_gain())
 
-        
+    def follow_tracing(self, loc):
+
+        # Follow the trace left by the primary
+        self.loc = loc
+        self.power = self.get_power(self.cell_channel_gain())
+
     def move(self):
         
         if (self.loc[0] + self.del_rad) > self.cell_radius:
