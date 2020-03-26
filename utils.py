@@ -67,10 +67,27 @@ def allocate(cell):
         ch.d2d = ch.id
         i += 1
     while i < len(cell.d2d_list):
-        cell.unallocated_d2d.put(i+1)
+        cell.unallocated_d2d.append(i+1)
         i += 1
 
     return cell
+
+def copy_initial_data(cell, new_cell):
+
+    for cellular in cell.cellular_list:
+        cellular_new = Cellular_UE(cellular.id, cellular.loc, 
+                cell.cell_radius, cell.del_cell_rad, cell.del_theta, 
+                cellular.shadow_fading)
+        new_cell.cellular_list.append(cellular_new)
+
+    for d2d in cell.d2d_list:
+        d2d_new = D2D(d2d.id, d2d.tx, d2d.rv,  
+                cell.cell_radius, cell.d2d_radius, 
+                cell.del_cell_rad, cell.del_d2d_rad, cell.del_theta, 
+                d2d.shadow_fading)
+        new_cell.d2d_list.append(d2d_new)
+
+    return new_cell
         
 def swap(cell, shared_channels, dedicated_channels, iteration):
 
@@ -89,7 +106,7 @@ def swap(cell, shared_channels, dedicated_channels, iteration):
                 dedicated_location = i
                 min_throughput = dedicated_channels[i].throughput
 
-        cell.unallocated_d2d.put(shared_channels[shared_location].d2d)
+        cell.unallocated_d2d.append(shared_channels[shared_location].d2d)
         print('D2D {} of Shared Channel {} Unallocated'.format(shared_channels[shared_location].d2d, 
                 shared_channels[shared_location].id))
 
@@ -100,12 +117,10 @@ def swap(cell, shared_channels, dedicated_channels, iteration):
                 dedicated_channels[dedicated_location].id, 
                 shared_channels[shared_location].id))
 
-        dedicated_channels[dedicated_location].d2d = cell.unallocated_d2d.get()
+        dedicated_channels[dedicated_location].d2d = cell.unallocated_d2d.popleft()
         print('Unallocated D2D {} to Dedicated Channel {}'.format(dedicated_channels[dedicated_location].d2d, 
                 dedicated_channels[dedicated_location].id))
 
-        cell.channel_list[shared_channels[shared_location].id - 1] = shared_channels[shared_location]
-        cell.channel_list[dedicated_channels[dedicated_location].id - 1] = dedicated_channels[dedicated_location]
 
     return cell, shared_channels, dedicated_channels
 
@@ -134,7 +149,7 @@ def swap_new(cell, shared_channels, dedicated_channels, iteration):
                 min_throughput = dedicated_channels[i].throughput
 
         if shared_location is not None:
-            cell.unallocated_d2d.put(shared_channels[shared_location].d2d)
+            cell.unallocated_d2d.append(shared_channels[shared_location].d2d)
             print('D2D {} of Shared Channel {} Unallocated'.format(shared_channels[shared_location].d2d, 
                     shared_channels[shared_location].id))
 
@@ -145,7 +160,7 @@ def swap_new(cell, shared_channels, dedicated_channels, iteration):
                     dedicated_channels[dedicated_location].id, 
                     shared_channels[shared_location].id))
 
-            dedicated_channels[dedicated_location].d2d = cell.unallocated_d2d.get()
+            dedicated_channels[dedicated_location].d2d = cell.unallocated_d2d.popleft()
             print('Unallocated D2D {} to Dedicated Channel {}'.format(dedicated_channels[dedicated_location].d2d, 
                     dedicated_channels[dedicated_location].id))
 
@@ -153,14 +168,13 @@ def swap_new(cell, shared_channels, dedicated_channels, iteration):
 
         else:
 
-            cell.unallocated_d2d.put(dedicated_channels[dedicated_location].d2d)
+            cell.unallocated_d2d.append(dedicated_channels[dedicated_location].d2d)
             print('D2D {} of Dedicated Channel {} Unallocated'.format(dedicated_channels[dedicated_location].d2d, 
                     dedicated_channels[dedicated_location].id))
 
-            dedicated_channels[dedicated_location].d2d = cell.unallocated_d2d.get()
+            dedicated_channels[dedicated_location].d2d = cell.unallocated_d2d.popleft()
             print('Unallocated D2D {} to Dedicated Channel {}'.format(dedicated_channels[dedicated_location].d2d, 
                     dedicated_channels[dedicated_location].id))
 
-        cell.channel_list[dedicated_channels[dedicated_location].id - 1] = dedicated_channels[dedicated_location]
 
     return cell, shared_channels, dedicated_channels
