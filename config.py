@@ -100,9 +100,10 @@ class D2D:
         print('Power list {}\n'.format(power_list))
         return power_list
 
-    def update_power_list(self, size, cell, d2d_sinr_threshold, noise):
+    def update_power_list(self, size, caching_parameter, cell, 
+            d2d_sinr_threshold, noise):
 
-        delta = self.power / 10
+        delta = self.power / caching_parameter
         threshold_power = self.power_given_SINR(d2d_sinr_threshold, 
                 cell.power, self.d2d_channel_gain(), 
                 self.cell_channel_gain(cell.loc, cell.shadow_fading), noise)

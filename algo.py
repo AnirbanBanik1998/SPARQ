@@ -20,7 +20,8 @@ Firstly in every iteration, we perform the swapping.
 Then We perform the learning, and use this learned power for the rest time
 '''
 def compute(cell, action_size, iterations, swap_func, caching, 
-        follow_trace, cellular_trace=None, d2d_trace=None):
+        caching_parameter=None, follow_trace=False, 
+        cellular_trace=None, d2d_trace=None):
     
     if not follow_trace:
         cellular_trace=[[] for _ in range(iterations)]
@@ -87,7 +88,7 @@ def compute(cell, action_size, iterations, swap_func, caching,
                             cell.cellular_list[channel.cell - 1], cell.d2d_threshold_SINR, 
                             cell.noise)
                 else:
-                    power_list = cell.d2d_list[channel.d2d - 1].update_power_list(action_size, 
+                    power_list = cell.d2d_list[channel.d2d - 1].update_power_list(action_size, caching_parameter, 
                             cell.cellular_list[channel.cell - 1], cell.d2d_threshold_SINR, 
                             cell.noise)
 
@@ -183,7 +184,7 @@ def compute(cell, action_size, iterations, swap_func, caching,
 if __name__ == '__main__':
 
     simulations = 5
-    iterations_per_simulation = 10
+    iterations_per_simulation = 50
 
     average_throughput_list = np.zeros(iterations_per_simulation)
     average_throughput_list_1 = np.zeros(iterations_per_simulation)
@@ -213,7 +214,7 @@ if __name__ == '__main__':
             cell3.mobility(True)
 
         cell = initial_user_locations(cell)
-        cell1 = copy_inital_data(cell, cell1)
+        cell1 = copy_initial_data(cell, cell1)
         cell2 = copy_initial_data(cell, cell2)
         cell3 = copy_initial_data(cell, cell3)
 
@@ -234,7 +235,8 @@ if __name__ == '__main__':
 
         iterations_list, throughput_list, _, _ = compute(cell1, 16, 
                 iterations_per_simulation, swap, caching=True, 
-                    follow_trace=True, cellular_trace=cellular_trace, 
+                    caching_parameter=2, follow_trace=True, 
+                    cellular_trace=cellular_trace, 
                     d2d_trace=d2d_trace)
         average_throughput_list_1 = average_throughput_list_1 + np.array(throughput_list)
 
@@ -246,7 +248,8 @@ if __name__ == '__main__':
 
         iterations_list, throughput_list, _, _ = compute(cell3, 16, 
                 iterations_per_simulation, swap_new, caching=True, 
-                    follow_trace=True, cellular_trace=cellular_trace, 
+                    caching_parameter=2, follow_trace=True, 
+                    cellular_trace=cellular_trace, 
                     d2d_trace=d2d_trace)
         average_throughput_list_3 = average_throughput_list_3 + np.array(throughput_list)
 
