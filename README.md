@@ -10,6 +10,9 @@ underlaying cellular networks
 * For the 2nd case in which D2D rx is moving radially wrt D2D tx:
   python3 algo.py 1
   
+  
+* To compare between the caching parameters, run python3 main.py 0 or 1
+  
 
 ## Documentation
 
