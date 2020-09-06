@@ -1,0 +1,61 @@
+To Do
+
+1. Multi Cell scenario.
+2. Multi Agent Learning.
+
+        Iteration - 1. Power Control. 2. Swapping.
+        
+        Cell UEs report their SINR to BS.
+        D2D Tx also report their SINR to BS.
+        
+        For Learning at each step for a sinle Tx, it needs to know all the powers of other D2Ds. 
+        This it gets from querying the BS. BS sends the SINR data, and we assume that the channel gain is the same for all.
+        So The D2D tx gets the powers of all the other D2D pairs.
+        
+        D2D report their sinr to BS only after power control is done completely
+        for one iteration.
+        
+        So in the next iteration, when the other D2Ds want to get the power at which these transmit to calculate their own sinr at each step of the learning, it will only get the final reported value of the SINR of this D2D in the previous iteration.
+        
+       Bolchi dara.
+       Ha
+       D2D when learning, needs to get the SINR of the cellular at each step. That it will get. 
+       
+       The D2D will only request SINR data from the BS, but not the power at which others are sending, so I guess it is feasible.
+       
+       Na private noe. D2D have to always synchronize with the BS at each step
+       Dekh we are not experieced in MULti agent.
+       So amader etuku dhortei hbe
+       baki d2d er data lagbei.
+       
+       Bolchi basically je ja signalling hbe sob PUSCH and PDSCH channels diye hbe. So chaitei pare, spec e nei hoeto. But still. As CQI report krte pare D2D BS ke. So SINR o report krtei pare hoeto, khub kichu osshabhabik noe.
+       Boi thekei porlm.
+       
+       
+       Bas ebar byapar ta holo. Je sob kota D2D ei learn krche, to at each step of their learning, their SINR changes, kintu reported value ta sudhu final tai hbe. To amra assume krchi je jokhon ekta D2D learnong er time e baki D2D er sinr gulo chae, dhorbo amra je ogulo ager reported value guloi.
+       
+       Reward
+       ------
+       
+       We will test considering priority = 1 and 2 both, and compare the results.
+       
+       
+
+       
+       Swapping
+       --------
+       
+       We will mainly consider those cases where Multi D2Ds are there in a channel along with a Cell UE.
+       
+       1. Throughput.
+       2. Cellular QoS. How much more above threshold or how much less than threshold.
+       
+       Good channels - where Cellular QoS satisfied. We will mainly try to make sure that the max cellular qos are satisfied, and the overall throughput also increases.
+       
+       One main important point. To swap mainly those D2Ds which are giving higher SINR, in Bad Channels.
+
+       
+       !. Identify Bad channels.
+       2. Higher SINR comparison. then cazz.
+       3. Swap to only those channels first where good, and where Cellular qos is much higher than threshold.
+

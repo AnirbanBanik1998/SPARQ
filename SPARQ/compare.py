@@ -15,8 +15,8 @@ from core.display import quad_display
 from algo import compute, smart_power_control
 
 
-simulations = 1
-iterations_per_simulation = 25
+simulations = 2
+iterations_per_simulation = 5
 
 average_throughput_list = np.zeros(iterations_per_simulation)
 average_throughput_list_1 = np.zeros(iterations_per_simulation)
